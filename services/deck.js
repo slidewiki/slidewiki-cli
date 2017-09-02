@@ -20,9 +20,9 @@ const self = module.exports = {
             'language',
             'license',
             'theme',
-            'comment',
-            'abstract',
-            'footer',
+            // 'comment',
+            // 'abstract',
+            // 'footer',
         ]);
 
         if (!payload.description) payload.description = ' ';
@@ -60,52 +60,75 @@ const self = module.exports = {
         });
     },
 
-    appendDeck: function(deckId, userId, url) {
-        let payload = {
-            selector: {
-                id: String(deckId),
-                spath: '',
-            },
-            nodeSpec: {
-                type: 'deck',
-            },
-            user: String(userId),
-        };
-
+    appendNode: function(deckId, nodeType, userId, url) {
         return rp.post({
             uri: `${url}/decktree/node/create`,
+            json: true,
+            body: {
+                selector: {
+                    id: String(deckId),
+                    spath: '',
+                },
+                nodeSpec: {
+                    type: nodeType,
+                },
+                user: String(userId),
+            },
+        });
+    },
+
+    updateDeck: function(deckId, deck, userId, url) {
+        let payload = {
+            user: String(userId),
+            // top_root_deck: 
+        };
+
+        deck = promoteRevision(deck);
+        
+        Object.assign(payload, _.pick(deck, [
+            'title',
+            'description',
+            'language',
+            'license',
+            'theme',
+        ]));
+
+        // bad api
+        if (!payload.description) payload.description = ' ';
+
+        return rp.put({
+            uri: `${url}/deck/${deckId}`,
             json: true,
             body: payload,
         });
     },
 
-    appendSlide: function(deckId, slide, userId, url) {
+    updateSlide: function(deckId, slideId, slide, userId, url) {
         let payload = {
-            selector: {
-                id: String(deckId),
-                spath: '',
-            },
-            nodeSpec: {
-                type: 'slide',
-            },
             user: String(userId),
+            root_deck: String(deckId),
+            // top_root_deck: 
         };
 
+        // slide original object should always have a single revision (the one requested)
         slide = promoteRevision(slide);
 
-        Object.assign(payload, _.pick(promoteRevision(slide), [
+        Object.assign(payload, _.pick(slide, [
             'title',
             'content',
             'speakernotes',
+            'comment',
+            'description',
+            'language',
             'license',
+            'dataSources',
         ]));
 
-        // 'language',
-        // 'comment',
-        // 'description',
+        // bad api
+        if (payload.description === null) payload.description = '';
 
-        return rp.post({
-            uri: `${url}/decktree/node/create`,
+        return rp.put({
+            uri: `${url}/slide/${slideId}`,
             json: true,
             body: payload,
         });
@@ -113,11 +136,11 @@ const self = module.exports = {
 
 };
 
-// creates an object with deck and revision properties merged
+// creates an object with base item and revision properties merged
 // deck input has an array of revisions, if more than one revision
 // is in the array, it takes the last element
-function promoteRevision(deck) {
-    let [latestRevision] = deck.revisions.slice(-1);
+function promoteRevision(item) {
+    let [latestRevision] = item.revisions.slice(-1);
 
-    return Object.assign({}, deck, latestRevision);
+    return Object.assign({}, item, latestRevision);
 }
