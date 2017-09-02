@@ -6,6 +6,16 @@ A set of command line tools to perform various tasks with slidewiki services Edi
 
 `$ npm install -g slidewiki-cli`
 
+**NOTE** since the package is not uploaded to npmjs this won't work, clone it locally instead,
+and from inside the working copy directory do
+
+```
+$ npm pack
+$ npm install -g slidewiki-cli-0.0.1.tgz
+```
+
+To remove it, just 
+`$ npm uninstall -g slidewiki-cli`
 
 ## Usage
 
