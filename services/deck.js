@@ -46,29 +46,39 @@ const self = module.exports = {
         });
     },
 
-    removeNode: function(deckId, index, userId, url) {
+    removeNode: function(deckId, index, rootDeckId, userId, url) {
+        let selector = {
+            id: String(rootDeckId),
+            // HACK mock this weird API parameter!
+            spath: `${deckId}:;:${index + 1}`,
+        };
+
         return rp.delete({
             uri: `${url}/decktree/node/delete`,
             json: true,
             body: {
-                selector: {
-                    id: String(deckId),
-                    spath: `:${index + 1}`,
-                },
+                selector: selector,
                 user: String(userId),
             },
         });
     },
 
-    appendNode: function(deckId, nodeType, userId, url) {
+    appendNode: function(deckId, nodeType, rootDeckId, userId, url) {
+        let selector = {
+            id: String(rootDeckId),
+            spath: '',
+        };
+
+        if (rootDeckId !== deckId) {
+            selector.stype = 'deck';
+            selector.sid = String(deckId);
+        }
+
         return rp.post({
             uri: `${url}/decktree/node/create`,
             json: true,
             body: {
-                selector: {
-                    id: String(deckId),
-                    spath: '',
-                },
+                selector: selector,
                 nodeSpec: {
                     type: nodeType,
                 },
@@ -77,14 +87,13 @@ const self = module.exports = {
         });
     },
 
-    updateDeck: function(deckId, deck, userId, url) {
+    updateDeck: function(deckId, deck, rootDeckId, userId, url) {
         let payload = {
             user: String(userId),
-            // top_root_deck: 
+            top_root_deck: String(rootDeckId),
         };
 
         deck = promoteRevision(deck);
-        
         Object.assign(payload, _.pick(deck, [
             'title',
             'description',
@@ -103,16 +112,15 @@ const self = module.exports = {
         });
     },
 
-    updateSlide: function(deckId, slideId, slide, userId, url) {
+    updateSlide: function(deckId, slideId, slide, rootDeckId, userId, url) {
         let payload = {
             user: String(userId),
             root_deck: String(deckId),
-            // top_root_deck: 
+            top_root_deck: String(rootDeckId),
         };
 
         // slide original object should always have a single revision (the one requested)
         slide = promoteRevision(slide);
-
         Object.assign(payload, _.pick(slide, [
             'title',
             'content',
