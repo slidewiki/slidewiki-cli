@@ -8,10 +8,11 @@ const self = module.exports = {
         if (argv.verbose) console.log(`copying ${argv.deck_id} from ${argv.source} to ${argv.target}`);
 
         let deckId = argv.deck_id;
+        let userId = argv.user_id;
 
         // 0, 0 means we need a new deck
-        copyDeck(deckId, 0, 0, argv.source, argv.target, argv.verbose).then((newDeckId) => {
-            console.info(`finished copying deck ${deckId} contents from ${argv.source} to deck ${newDeckId} in ${argv.target}`);
+        copyDeck(deckId, 0, 0, userId, argv.source, argv.target, argv.verbose).then((newDeckId) => {
+            console.info(`finished copying deck ${deckId} from ${argv.source} to deck ${newDeckId} in ${argv.target}`);
         }).catch((err) => {
             if (err.statusCode) {
                 if (err.statusCode === 404) {
@@ -26,14 +27,10 @@ const self = module.exports = {
 
 };
 
-function copyDeck(sourceId, targetId, rootDeckId, source, target, verbose=false) {
+function copyDeck(sourceId, targetId, rootDeckId, userId, source, target, verbose=false) {
 
     return deckService.read(sourceId, source).then((deck) => {
         if (verbose) console.log(`fetched deck metadata for ${sourceId} from ${source}`);
-
-        // console.log(deck);
-
-        let userId = 2488;
 
         if (targetId && rootDeckId) {
             // deck exists, we update its metadata...
@@ -60,7 +57,7 @@ function copyDeck(sourceId, targetId, rootDeckId, source, target, verbose=false)
         // we need to recursively continue copying the subdecks returned !!!
         return Array.from(subDeckIds.entries()).reduce((p, entry) => {
             let [sourceDeckId, targetDeckId] = entry;
-            return p.then(() => copyDeck(sourceDeckId, targetDeckId, rootDeckId, source, target, verbose));
+            return p.then(() => copyDeck(sourceDeckId, targetDeckId, rootDeckId, userId, source, target, verbose));
         }, Promise.resolve());
 
     }).then(() => rootDeckId);
