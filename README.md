@@ -14,7 +14,7 @@ $ npm pack
 $ npm install -g slidewiki-cli-0.0.1.tgz
 ```
 
-To remove it, just 
+To remove it, just
 `$ npm uninstall -g slidewiki-cli`
 
 ## Usage
@@ -33,4 +33,14 @@ Options:
   --user_id      id of the user that will be the owner of the deck copy
   --help         Show help
   --verbose, -v
+```
+
+## Running the tool from Docker image
+
+The tool is also available via the Docker image `slidewiki/cli`. You can use it
+either in interactive mode by starting a shell in the container or you can issue
+a command from the command line like this:
+
+```
+docker run -it --rm slidewiki/cli slidewiki --help
 ```
