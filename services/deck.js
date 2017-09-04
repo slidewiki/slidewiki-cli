@@ -134,6 +134,7 @@ const self = module.exports = {
 
         // bad api
         if (payload.description === null) payload.description = '';
+        _.each(payload.dataSources, (ds) => { delete ds._id; });
 
         return rp.put({
             uri: `${url}/slide/${slideId}`,
