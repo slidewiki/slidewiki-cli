@@ -134,6 +134,7 @@ const self = module.exports = {
 
         // bad api
         if (payload.description === null) payload.description = '';
+        if (!payload.speakernotes) delete payload.speakernotes;
         _.each(payload.dataSources, (ds) => { delete ds._id; });
 
         return rp.put({
