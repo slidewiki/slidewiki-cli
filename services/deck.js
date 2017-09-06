@@ -9,6 +9,11 @@ const self = module.exports = {
         return rp.get({
             uri: `${url}/deck/${deckId}`,
             json: true,
+        }).then((deck) => {
+            if (deck.revisions.length > 1) {
+                deck.revisions = deck.revisions.slice(-1);
+            }
+            return deck;
         });
     },
 
