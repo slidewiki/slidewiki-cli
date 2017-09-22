@@ -30,7 +30,8 @@ Commands:
 Options:
   --source       url of the deck service to copy from
   --target       url of the deck service to copy to
-  --user_id      id of the user that will be the owner of the deck copy
+  --email        email of the registered account that will own the deck copy
+  --password     password for account authentication
   --help         Show help
   --verbose, -v
 ```

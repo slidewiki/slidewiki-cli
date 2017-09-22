@@ -12,7 +12,7 @@ const self = module.exports = {
         });
     },
 
-    create: function(deck, userId, url) {
+    create: function(deck, url, authToken) {
         let payload = promoteRevision(deck);
         payload = _.pick(payload, [
             'title',
@@ -27,15 +27,11 @@ const self = module.exports = {
 
         if (!payload.description) payload.description = ' ';
 
-        // TODO change this after proper authentication is merged
-        payload.user = String(userId);
-
-        // return Promise.resolve(payload);
-
         return rp.post({
             uri: `${url}/deck/new`,
             json: true,
             body: payload,
+            headers: { '----jwt----': authToken },
         });
     },
 
@@ -46,7 +42,7 @@ const self = module.exports = {
         });
     },
 
-    removeNode: function(deckId, index, rootDeckId, userId, url) {
+    removeNode: function(deckId, index, rootDeckId, url, authToken) {
         let selector = {
             id: String(rootDeckId),
             // HACK mock this weird API parameter!
@@ -58,12 +54,12 @@ const self = module.exports = {
             json: true,
             body: {
                 selector: selector,
-                user: String(userId),
             },
+            headers: { '----jwt----': authToken },
         });
     },
 
-    appendNode: function(deckId, nodeType, rootDeckId, userId, url) {
+    appendNode: function(deckId, nodeType, rootDeckId, url, authToken) {
         let selector = {
             id: String(rootDeckId),
             spath: '',
@@ -82,14 +78,13 @@ const self = module.exports = {
                 nodeSpec: {
                     type: nodeType,
                 },
-                user: String(userId),
             },
+            headers: { '----jwt----': authToken },
         });
     },
 
-    updateDeck: function(deckId, deck, rootDeckId, userId, url) {
+    updateDeck: function(deckId, deck, rootDeckId, url, authToken) {
         let payload = {
-            user: String(userId),
             top_root_deck: String(rootDeckId),
         };
 
@@ -109,12 +104,12 @@ const self = module.exports = {
             uri: `${url}/deck/${deckId}`,
             json: true,
             body: payload,
+            headers: { '----jwt----': authToken },
         });
     },
 
-    updateSlide: function(deckId, slideId, slide, rootDeckId, userId, url) {
+    updateSlide: function(deckId, slideId, slide, rootDeckId, url, authToken) {
         let payload = {
-            user: String(userId),
             root_deck: String(deckId),
             top_root_deck: String(rootDeckId),
         };
@@ -140,6 +135,7 @@ const self = module.exports = {
             uri: `${url}/slide/${slideId}`,
             json: true,
             body: payload,
+            headers: { '----jwt----': authToken },
         });
     },
 
