@@ -23,7 +23,7 @@ module.exports = {
         "prefer-arrow-callback": 1,
         "dot-notation": [2, {"allowKeywords": true}],
         "no-use-before-define": 0,
-        "no-unused-vars": 1,
+        "no-unused-vars": [1, { "varsIgnorePattern": "^self$" }],
         "yoda": [2, "never"],
         "no-alert": 2,
         "no-this-before-super": 2,

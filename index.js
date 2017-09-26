@@ -3,15 +3,18 @@
 
 require('yargs')
     .usage('Usage: $0 <command> [options]')
-    .help()
     .command('cp <deck_id>', 'copy a deck tree to local file or to another slidewiki deployment', (yargs) => {
         yargs.option('source', {
             describe: 'url of the deck service to copy from'
         }).option('target', {
             describe: 'url of the deck service to copy to'
-        }).option('user_id', {
-            describe: 'id of the user that will be the owner of the deck copy'
-        }).demandOption(['source', 'target', 'user_id']);
+        }).option('authority', {
+            describe: 'url of the user service the target deck service authenticates against'
+        }).option('email', {
+            describe: 'email of the registered account that will own the deck copy'
+        }).option('password', {
+            describe: 'password for account authentication'
+        }).demandOption(['source', 'target', 'authority', 'email']);
     }, (argv) => {
         require('./commands/cp').execute(argv);
     })
@@ -25,4 +28,7 @@ require('yargs')
     .option('verbose', {
         alias: 'v',
         default: false,
-    }).argv;
+    })
+    .demandCommand()
+    .help()
+    .argv;
