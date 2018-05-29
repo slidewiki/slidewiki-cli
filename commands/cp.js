@@ -1,12 +1,8 @@
 'use strict';
 
+const { authenticate } = require('../lib/authenticate');
+
 const deckService = require('../services/deck');
-const userService = require('../services/user');
-
-const prompt = require('prompt');
-
-// customize prompt
-prompt.message = '';
 
 const self = module.exports = {
 
@@ -14,7 +10,7 @@ const self = module.exports = {
         let deckId = argv.deck_id;
 
         // first let's authenticate
-        authenticateUser(argv.email, argv.password, argv.authority)
+        authenticate(argv.email, argv.password, argv.authority)
             .catch((err) => {
                 if (err.statusCode === 404) {
                     // wrong credentials
@@ -47,36 +43,6 @@ const self = module.exports = {
     },
 
 };
-
-// authenticates user against the user service and returns user info and authentication token
-function authenticateUser(email, password, authUrl) {
-    return getPassword(email, password)
-        .then((password) => userService.authenticate(email, password, authUrl));
-}
-
-// returns password after optional prompt as a promise
-function getPassword(email, password) {
-    if (password) return Promise.resolve(password);
-
-    // prompt for password
-    return new Promise((resolve, reject) => {
-        prompt.start();
-
-        prompt.get({
-            properties: {
-                password: {
-                    description: `Please provide a password for user ${email}`,
-                    hidden: true,
-                },
-            },
-        }, (err, result) => {
-            if (err) return reject(err);
-
-            resolve(result.password);
-        });
-    });
-
-}
 
 function copyDeck(sourceId, targetId, rootDeckId, source, target, authToken, verbose=false) {
 
