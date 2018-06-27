@@ -47,12 +47,17 @@ const self = module.exports = {
         });
     },
 
-    removeNode: function(deckId, index, rootDeckId, url, authToken) {
+    removeNode: function(deckId, {itemId, itemKind, index}, rootDeckId, url, authToken) {
         let selector = {
             id: String(rootDeckId),
             // HACK mock this weird API parameter!
             spath: `${deckId}:;:${index + 1}`,
         };
+
+        if (itemKind && itemId) {
+            selector.stype = itemKind;
+            selector.sid = itemId;
+        }
 
         return rp.delete({
             uri: `${url}/decktree/node/delete`,
