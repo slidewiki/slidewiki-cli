@@ -98,7 +98,7 @@ function copyDeckChildren(sourceDeck, targetDeckId, rootDeckId, sourceURL, targe
                     return deckService.appendNode(targetDeckId, 'slide', rootDeckId, targetURL, authToken).then((newSlide) => {
                         if (verbose) console.log(`created slide ${newSlide.id}`);
 
-                        return deckService.updateSlide(targetDeckId, newSlide.id, slide, rootDeckId, targetURL, authToken);
+                        return deckService.updateSlide(targetDeckId, newSlide.id, slide, rootDeckId, targetURL, authToken, sourceURL, targetURL);
                     });
 
                 }).then(() => subDeckIds); // always return the list so that it can be forwarded to the next iteration
