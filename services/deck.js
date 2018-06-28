@@ -121,7 +121,7 @@ const self = module.exports = {
         });
     },
 
-    updateSlide: async function(deckId, slideId, slide, rootDeckId, url, authToken, sourceURL, targetURL) {
+    updateSlide: async function(deckId, slideId, slide, rootDeckId, url, authToken, sourceURL) {
         let payload = {
             root_deck: String(deckId),
             top_root_deck: String(rootDeckId),
@@ -139,7 +139,7 @@ const self = module.exports = {
             'license',
             'dataSources',
         ]));
-        let newImageNames = await createImages(payload.content, sourceURL, targetURL, authToken);
+        let newImageNames = await createImages(payload.content, sourceURL, url, authToken);
         payload.content = exchangeImageURLs(payload.content, newImageNames);
 
         // bad api
