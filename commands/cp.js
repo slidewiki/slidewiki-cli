@@ -64,14 +64,8 @@ function copyDeck(sourceId, targetId, rootDeckId, source, target, authToken, ver
             rootDeckId = newDeck._id;
             if (verbose) console.log(`created root deck ${rootDeckId} in ${target} with data from deck ${sourceId} from source`);
 
-            // find the id of the (only) slide created as well
-            let items = newDeck.revisions ? newDeck.revisions[0].contentItems : newDeck.contentItems;
-            let slideId = `${items[0].ref.id}-${items[0].ref.revision}`;
-
-            // this api creates a slide we don't want, let's remove it
-            return deckService.removeNode(rootDeckId, { itemKind: 'slide', itemId: slideId, index: 0 }, rootDeckId, target, authToken)
-                // and now we can add the stuff from the original deck :)
-                .then(() => copyDeckChildren(deck, rootDeckId, rootDeckId, source, target, authToken, verbose));
+            // add the stuff from the original deck
+            return copyDeckChildren(deck, rootDeckId, rootDeckId, source, target, authToken, verbose);
         });
 
     }).then((subDeckIds) => {
@@ -95,7 +89,7 @@ function copyDeckChildren(sourceDeck, targetDeckId, rootDeckId, sourceURL, targe
                 return deckService.readSlide(cItemId, sourceURL).then((slide) => {
                     if (verbose) console.log(`fetched slide data for ${cItemId}`);
 
-                    return deckService.appendNode(targetDeckId, 'slide', rootDeckId, targetURL, authToken).then((newSlide) => {
+                    return deckService.appendNode(targetDeckId, 'slide', {}, rootDeckId, targetURL, authToken).then((newSlide) => {
                         if (verbose) console.log(`created slide ${newSlide.id}`);
 
                         return deckService.updateSlide(targetDeckId, newSlide.id, slide, rootDeckId, targetURL, authToken);
@@ -103,20 +97,9 @@ function copyDeckChildren(sourceDeck, targetDeckId, rootDeckId, sourceURL, targe
 
                 }).then(() => subDeckIds); // always return the list so that it can be forwarded to the next iteration
             } else {
-                return deckService.appendNode(targetDeckId, 'deck', rootDeckId, targetURL, authToken)
+                return deckService.appendNode(targetDeckId, 'deck', null, rootDeckId, targetURL, authToken)
                     .then((res) => deckService.read(res.id, targetURL))
-                    .then((subdeck) => {
-                        let subdeckId = subdeck._id;
-
-                        // find the id of the (only) slide created as well
-                        let items = subdeck.revisions ? subdeck.revisions[0].contentItems : subdeck.contentItems;
-                        let slideId = `${items[0].ref.id}-${items[0].ref.revision}`;
-
-                        // again, this creates a deck with a slide that we need to remove
-                        return deckService.removeNode(subdeckId, { itemKind: 'slide', itemId: slideId, index: 0 }, rootDeckId, targetURL, authToken)
-                            // .then(() => console.log(`created subdeck ${subdeckId}`))
-                            .then(() => subDeckIds.set(cItemId, subdeckId)); // we are gathering all direct subdecks created under the deck
-                    });
+                    .then((subdeck) => subDeckIds.set(cItemId, subdeck._id));
             }
         });
 

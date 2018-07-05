@@ -32,6 +32,9 @@ const self = module.exports = {
 
         if (!payload.description) payload.description = ' ';
 
+        // never create the default slide
+        Object.assign(payload, { empty: true });
+
         return rp.post({
             uri: `${url}/deck/new`,
             json: true,
@@ -69,7 +72,7 @@ const self = module.exports = {
         });
     },
 
-    appendNode: function(deckId, nodeType, rootDeckId, url, authToken) {
+    appendNode: function(deckId, nodeType, payload, rootDeckId, url, authToken) {
         let selector = {
             id: String(rootDeckId),
             spath: '',
@@ -80,6 +83,11 @@ const self = module.exports = {
             selector.sid = String(deckId);
         }
 
+        if (nodeType === 'deck') {
+            // don't make a slide inside, not needed!
+            payload = Object.assign(payload || {}, { empty: true });
+        }
+
         return rp.post({
             uri: `${url}/decktree/node/create`,
             json: true,
@@ -87,6 +95,7 @@ const self = module.exports = {
                 selector: selector,
                 nodeSpec: {
                     type: nodeType,
+                    [nodeType]: payload,
                 },
             },
             headers: { '----jwt----': authToken },
