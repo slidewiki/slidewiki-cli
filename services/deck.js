@@ -35,6 +35,9 @@ const self = module.exports = {
 
         if (!payload.description) payload.description = ' ';
 
+        // never create the default slide
+        Object.assign(payload, { empty: true });
+
         return rp.post({
             uri: `${url}/deck/new`,
             json: true,
@@ -72,7 +75,7 @@ const self = module.exports = {
         });
     },
 
-    appendNode: function(deckId, nodeType, rootDeckId, url, authToken) {
+    appendNode: async function(deckId, nodeType, payload, rootDeckId, url, authToken, sourceURL) {
         let selector = {
             id: String(rootDeckId),
             spath: '',
@@ -83,6 +86,19 @@ const self = module.exports = {
             selector.sid = String(deckId);
         }
 
+        // deck/slide original object should always have a single revision (the one requested)
+        if (payload) {
+            payload = promoteRevision(payload);
+        }
+
+        if (nodeType === 'deck') {
+            // don't make a slide inside, not needed!
+            payload = Object.assign(payload || {}, { empty: true });
+        } else if (payload) {
+            let newImageNames = await createImages(payload.content, sourceURL, url, authToken);
+            payload.content = exchangeImageURLs(payload.content, newImageNames);
+        }
+
         return rp.post({
             uri: `${url}/decktree/node/create`,
             json: true,
@@ -90,6 +106,7 @@ const self = module.exports = {
                 selector: selector,
                 nodeSpec: {
                     type: nodeType,
+                    [nodeType]: payload,
                 },
             },
             headers: { '----jwt----': authToken },
