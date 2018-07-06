@@ -83,6 +83,11 @@ const self = module.exports = {
             selector.sid = String(deckId);
         }
 
+        // deck/slide original object should always have a single revision (the one requested)
+        if (payload) {
+            payload = promoteRevision(payload);
+        }
+
         if (nodeType === 'deck') {
             // don't make a slide inside, not needed!
             payload = Object.assign(payload || {}, { empty: true });
