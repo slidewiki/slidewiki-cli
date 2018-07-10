@@ -22,11 +22,13 @@ const self = module.exports = {
             .then((credentials) => {
                 if (!credentials) return;
 
-                if (argv.verbose) console.log(`copying ${argv.deck_id} from ${argv.source} to ${argv.target} as ${credentials.userName}`);
+                if (argv.verbose) console.error(`copying ${argv.deck_id} from ${argv.source} to ${argv.target} as ${credentials.userName}`);
 
                 // 0, 0 means we need a new deck
                 return copyDeck(deckId, 0, 0, argv.source, argv.target, credentials.authToken, argv.verbose).then((newDeckId) => {
-                    console.info(`finished copying deck ${deckId} from ${argv.source} to deck ${newDeckId} in ${argv.target}`);
+                    console.error(`finished copying deck ${deckId} from ${argv.source} to deck ${newDeckId} in ${argv.target}`);
+                    // print new Deck ID to STDOUT 
+                    console.log(`${newDeckId}`);
                 });
             })
             .catch((err) => {
@@ -47,12 +49,12 @@ const self = module.exports = {
 function copyDeck(sourceId, targetId, rootDeckId, source, target, authToken, verbose=false) {
 
     return deckService.read(sourceId, source).then((deck) => {
-        if (verbose) console.log(`fetched deck metadata for ${sourceId} from ${source}`);
+        if (verbose) console.error(`fetched deck metadata for ${sourceId} from ${source}`);
 
         if (targetId && rootDeckId) {
             // deck exists, we update its metadata...
             return deckService.updateDeck(targetId, deck, rootDeckId, target, authToken).then(() => {
-                if (verbose) console.log(`updated deck ${targetId} in ${target} with data from deck ${sourceId} from source`);
+                if (verbose) console.error(`updated deck ${targetId} in ${target} with data from deck ${sourceId} from source`);
 
                 // ... and add the children from the original deck :)
                 return copyDeckChildren(deck, targetId, rootDeckId, source, target, authToken, verbose);
@@ -62,7 +64,7 @@ function copyDeck(sourceId, targetId, rootDeckId, source, target, authToken, ver
         return deckService.create(deck, target, authToken).then((newDeck) => deckService.read(newDeck.id, target)).then((newDeck) => {
             // the new deck we create is the root of the deck tree
             rootDeckId = newDeck._id;
-            if (verbose) console.log(`created root deck ${rootDeckId} in ${target} with data from deck ${sourceId} from source`);
+            if (verbose) console.error(`created root deck ${rootDeckId} in ${target} with data from deck ${sourceId} from source`);
 
             // find the id of the (only) slide created as well
             let items = newDeck.revisions ? newDeck.revisions[0].contentItems : newDeck.contentItems;
@@ -93,10 +95,10 @@ function copyDeckChildren(sourceDeck, targetDeckId, rootDeckId, sourceURL, targe
             let cItemId = `${cItem.ref.id}-${cItem.ref.revision}`;
             if (cItem.kind === 'slide') {
                 return deckService.readSlide(cItemId, sourceURL).then((slide) => {
-                    if (verbose) console.log(`fetched slide data for ${cItemId}`);
+                    if (verbose) console.error(`fetched slide data for ${cItemId}`);
 
                     return deckService.appendNode(targetDeckId, 'slide', rootDeckId, targetURL, authToken).then((newSlide) => {
-                        if (verbose) console.log(`created slide ${newSlide.id}`);
+                        if (verbose) console.error(`created slide ${newSlide.id}`);
 
                         return deckService.updateSlide(targetDeckId, newSlide.id, slide, rootDeckId, targetURL, authToken);
                     });
