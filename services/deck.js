@@ -184,7 +184,7 @@ async function createImages(content, sourceURL, targetURL, authtoken){
         let $ = cheerio.load(content);
         let urls = $(content).find('img').map(async (i, image) => {//process each image in the slide
             let src = URL.parse($(image).attr('src'));
-            if(src.host.includes('fileservice.')) {//only process images from the fileservice
+            if(src.host.startsWith(sourceURL)) {//only process images from the fileservice
                 let newSrc = await fileservice.create(src, URL.parse(sourceURL), URL.parse(targetURL), authtoken);
                 return (newSrc !== null) ? [src.href, targetURL + '/picture/' + newSrc] : null;
             }
