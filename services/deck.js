@@ -75,7 +75,7 @@ const self = module.exports = {
         });
     },
 
-    appendNode: async function(deckId, nodeType, payload, rootDeckId, url, authToken, sourceURL) {
+    appendNode: async function(deckId, nodeType, payload, rootDeckId, url, authToken, fileSourceURL, fileTargetURL) {
         let selector = {
             id: String(rootDeckId),
             spath: '',
@@ -95,7 +95,7 @@ const self = module.exports = {
             // don't make a slide inside, not needed!
             payload = Object.assign(payload || {}, { empty: true });
         } else if (payload) {
-            let newImageNames = await createImages(payload.content, sourceURL, url, authToken);
+            let newImageNames = await createImages(payload.content, fileSourceURL, fileTargetURL, authToken);
             payload.content = exchangeImageURLs(payload.content, newImageNames);
         }
 
@@ -138,7 +138,7 @@ const self = module.exports = {
         });
     },
 
-    updateSlide: async function(deckId, slideId, slide, rootDeckId, url, authToken, sourceURL) {
+    updateSlide: async function(deckId, slideId, slide, rootDeckId, url, authToken, fileSourceURL, fileTargetURL) {
         let payload = {
             root_deck: String(deckId),
             top_root_deck: String(rootDeckId),
@@ -156,7 +156,7 @@ const self = module.exports = {
             'license',
             'dataSources',
         ]));
-        let newImageNames = await createImages(payload.content, sourceURL, url, authToken);
+        let newImageNames = await createImages(payload.content, fileSourceURL, fileTargetURL, authToken);
         payload.content = exchangeImageURLs(payload.content, newImageNames);
 
         // bad api
@@ -180,17 +180,13 @@ const self = module.exports = {
 };
 
 async function createImages(content, sourceURL, targetURL, authtoken){
-    if(content.includes('src="https://fileservice.')){//only execute if images are in the slide
+    if(content.includes('src="' + sourceURL)){//only execute if images are in the slide
         let $ = cheerio.load(content);
         let urls = $(content).find('img').map(async (i, image) => {//process each image in the slide
             let src = URL.parse($(image).attr('src'));
             if(src.host.includes('fileservice.')) {//only process images from the fileservice
-                let sourceHost = src.protocol + '//' + src.host;
-                let targetHost = URL.parse(targetURL).host;
-                targetHost = targetHost.slice(targetHost.indexOf('.'), targetHost.length);
-                targetHost = 'https://fileservice' + targetHost;
-                let newSrc = await fileservice.create(src, URL.parse(sourceHost), URL.parse(targetHost), authtoken);
-                return (newSrc !== null) ? [src.href, targetHost + '/picture/' + newSrc] : null;
+                let newSrc = await fileservice.create(src, URL.parse(sourceURL), URL.parse(targetURL), authtoken);
+                return (newSrc !== null) ? [src.href, targetURL + '/picture/' + newSrc] : null;
             }
         });
         return await Promise.all(urls.toArray());
