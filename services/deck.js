@@ -180,11 +180,11 @@ const self = module.exports = {
 };
 
 async function createImages(content, sourceURL, targetURL, authtoken){
-    if(content.includes('src="' + sourceURL)){//only execute if images are in the slide
+    if(content.includes('src="' + sourceURL.replace('http://', 'https://')) || content.includes('src="' + sourceURL.replace('https://', 'http://'))){//only execute if images are in the slide
         let $ = cheerio.load(content);
         let urls = $(content).find('img').map(async (i, image) => {//process each image in the slide
             let src = URL.parse($(image).attr('src'));
-            if(src.host.startsWith(sourceURL)) {//only process images from the fileservice
+            if(src.href.startsWith(sourceURL.replace('http://', 'https://')) || src.href.startsWith(sourceURL.replace('https://', 'http://'))) {//only process images from the fileservice
                 let newSrc = await fileservice.create(src, URL.parse(sourceURL), URL.parse(targetURL), authtoken);
                 return (newSrc !== null) ? [src.href, targetURL + '/picture/' + newSrc] : null;
             }

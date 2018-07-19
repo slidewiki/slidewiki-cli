@@ -8,7 +8,7 @@ const self = module.exports = {
 
     async create(imageURL, fileServiceURLFrom, fileServiceURLTo, authToken) {/*URLs are URL objects*/
         let fileName = imageURL.href.split('/');
-        fileName = fileName[fileName.length - 1];
+        fileName = fileName[fileName.length - 1].split('?')[0];
         let metaData;
         try {
             metaData = await rp.get({//metadata
@@ -16,16 +16,29 @@ const self = module.exports = {
                 json: true,
             });
         } catch (e) {
+            // console.log('Error', e);
             switch(e.statusCode){
             case 404:
-                metaData = {license: 'CC0', type: 'image/jpeg'};
+                metaData = {
+                    license: 'CC0',
+                    type: (fileName.includes('.png')) ? 'image/png' : 'image/jpeg',
+                    copyrightAdditions: 'This image was migrated from SlideWiki version 1 (the non EU project) or is not well-kept which resulted in missing originator information. Thus it has a generic license information.'
+                };
+                console.log('Found no metadata for image', fileName, 'using generic information');
                 break;
             default:
                 throw e;
             }
         }
         try{
-            await download(`${fileServiceURLFrom.href}picture/${fileName}`, './');//file
+            if (imageURL.href.indexOf('/picture/') !== -1){
+                // console.log('get picture', `${fileServiceURLFrom.href}picture/${fileName}`);
+                await download(`${fileServiceURLFrom.href}picture/${fileName}`, './');//file
+            }
+            else{
+                // console.log('get old image', imageURL.href.split('?')[0]);
+                await download(imageURL.href.split('?')[0], './');//file
+            }
         } catch(e) {
             switch (e.statusCode) {
             case 404:
