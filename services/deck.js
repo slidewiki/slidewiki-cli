@@ -196,6 +196,8 @@ async function createImages(content, sourceURL, targetURL, authtoken){
 function exchangeImageURLs(content, newImageNames){
     if(newImageNames){//only execute if there are imageNames
         newImageNames.forEach((names) => {
+            if (!names) return;
+
             let $ = cheerio.load(content);
             if(names[1] !== null){//only execute if there is a new name
                 $(`img[src="${names[0]}"]`).attr('src',names[1]);
