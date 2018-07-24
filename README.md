@@ -11,7 +11,7 @@ and from inside the working copy directory do
 
 ```
 $ npm pack
-$ npm install -g slidewiki-cli-0.0.1.tgz
+$ npm install -g slidewiki-cli-0.0.2.tgz
 ```
 
 To remove it, just
@@ -30,6 +30,8 @@ Commands:
 Options:
   --source       url of the deck service to copy from
   --target       url of the deck service to copy to
+  --filesource   url of the file service to copy from
+  --filetarget   url of the file service to copy to
   --email        email of the registered account that will own the deck copy
   --password     password for account authentication
   --help         Show help
@@ -45,3 +47,10 @@ a command from the command line like this:
 ```
 docker run -it --rm slidewiki/cli slidewiki --help
 ```
+
+## Changelog
+
+* 0.0.2:
+ * Added support for moving images between slidewiki instances 
+* 0.0.1
+ * move decks and slides between slidewiki instances

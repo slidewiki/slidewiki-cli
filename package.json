@@ -1,6 +1,6 @@
 {
   "name": "slidewiki-cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A set of command line tools to perform various tasks with slidewiki services",
   "repository": {
     "type": "git",
