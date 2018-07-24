@@ -2,6 +2,9 @@
 
 const _ = require('lodash');
 const rp = require('request-promise-native');
+const fileservice = require('./file.js');
+const cheerio = require('cheerio');
+const URL = require('url');
 
 const self = module.exports = {
 
@@ -72,7 +75,7 @@ const self = module.exports = {
         });
     },
 
-    appendNode: function(deckId, nodeType, payload, rootDeckId, url, authToken) {
+    appendNode: async function(deckId, nodeType, payload, rootDeckId, url, authToken, fileSourceURL, fileTargetURL) {
         let selector = {
             id: String(rootDeckId),
             spath: '',
@@ -91,6 +94,9 @@ const self = module.exports = {
         if (nodeType === 'deck') {
             // don't make a slide inside, not needed!
             payload = Object.assign(payload || {}, { empty: true });
+        } else if (payload) {
+            let newImageNames = await createImages(payload.content, fileSourceURL, fileTargetURL, authToken);
+            payload.content = exchangeImageURLs(payload.content, newImageNames);
         }
 
         return rp.post({
@@ -132,7 +138,7 @@ const self = module.exports = {
         });
     },
 
-    updateSlide: function(deckId, slideId, slide, rootDeckId, url, authToken) {
+    updateSlide: async function(deckId, slideId, slide, rootDeckId, url, authToken, fileSourceURL, fileTargetURL) {
         let payload = {
             root_deck: String(deckId),
             top_root_deck: String(rootDeckId),
@@ -150,6 +156,8 @@ const self = module.exports = {
             'license',
             'dataSources',
         ]));
+        let newImageNames = await createImages(payload.content, fileSourceURL, fileTargetURL, authToken);
+        payload.content = exchangeImageURLs(payload.content, newImageNames);
 
         // bad api
         if (payload.description === null) payload.description = '';
@@ -170,6 +178,34 @@ const self = module.exports = {
     },
 
 };
+
+async function createImages(content, sourceURL, targetURL, authtoken){
+    if(content.includes('src="' + sourceURL.replace('http://', 'https://')) || content.includes('src="' + sourceURL.replace('https://', 'http://'))){//only execute if images are in the slide
+        let $ = cheerio.load(content);
+        let urls = $(content).find('img').map(async (i, image) => {//process each image in the slide
+            let src = URL.parse($(image).attr('src'));
+            if(src.href.startsWith(sourceURL.replace('http://', 'https://')) || src.href.startsWith(sourceURL.replace('https://', 'http://'))) {//only process images from the fileservice
+                let newSrc = await fileservice.create(src, URL.parse(sourceURL), URL.parse(targetURL), authtoken);
+                return (newSrc !== null) ? [src.href, targetURL + '/picture/' + newSrc] : null;
+            }
+        });
+        return await Promise.all(urls.toArray());
+    }
+}
+
+function exchangeImageURLs(content, newImageNames){
+    if(newImageNames){//only execute if there are imageNames
+        newImageNames.forEach((names) => {
+            let $ = cheerio.load(content);
+            if(names[1] !== null){//only execute if there is a new name
+                $(`img[src="${names[0]}"]`).attr('src',names[1]);
+                content = $.html();
+            }
+        });
+    }
+
+    return content.replace('</body></html>','').replace('<html><head></head><body>','');
+}
 
 // creates an object with base item and revision properties merged
 // deck input has an array of revisions, if more than one revision

@@ -14,7 +14,11 @@ require('yargs')
             describe: 'email of the registered account that will own the deck copy'
         }).option('password', {
             describe: 'password for account authentication'
-        }).demandOption(['source', 'target', 'authority', 'email']);
+        }).option('filesource', {
+            describe: 'url of the file service to copy from'
+        }).option('filetarget', {
+            describe: 'url of the file service to copy to'
+        }).demandOption(['source', 'target', 'authority', 'email', 'filesource', 'filetarget']);
     }, (argv) => {
         require('./commands/cp').execute(argv);
     })
